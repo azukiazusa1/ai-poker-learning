@@ -1,8 +1,48 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ポーカー学習アプリケーション
 
-## Getting Started
+GTO戦略に基づいたポーカー学習アプリケーションです。ユーザーはハンド履歴を入力し、AIが最適なプレイ戦略を提案します。
 
-First, run the development server:
+## 機能
+
+- 直感的なハンド履歴入力フォーム
+- ステップバイステップの入力プロセス
+- AI（Anthropic Claude）による詳細なハンド解析
+- ICM（Independent Chip Model）を考慮した戦略提案
+- リアルタイムストリーミングレスポンス
+
+## 必要条件
+
+- [Anthropic API キー](https://www.anthropic.com/api)
+- Node.js 18.0.0 以上
+
+## セットアップ
+
+1. リポジトリをクローンする:
+
+```bash
+git clone https://github.com/yourusername/poker-learning.git
+cd poker-learning
+```
+
+2. 依存関係をインストールする:
+
+```bash
+npm install
+# or
+yarn
+# or
+pnpm install
+```
+
+3. 環境変数を設定する:
+
+`.env.example` ファイルを `.env.local` としてコピーし、Anthropic API キーを追加します:
+
+```
+ANTHROPIC_API_KEY=your_anthropic_api_key_here
+```
+
+4. 開発サーバーを起動する:
 
 ```bash
 npm run dev
@@ -10,27 +50,39 @@ npm run dev
 yarn dev
 # or
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+5. ブラウザで [http://localhost:3000](http://localhost:3000) を開きます。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 使い方
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. ハンド情報入力: プレイヤー数、スタックサイズ、自分のハンドとポジションを入力します。
+2. プリフロップアクション: プリフロップでのアクションを記録します。
+3. フロップ: フロップのカードとアクションを記録します。
+4. ターン: ターンのカードとアクションを記録します。
+5. リバー: リバーのカードとアクションを記録します（オプション）。
+6. 解析: ハンド履歴を確認し、「ハンド解析する」ボタンをクリックします。
 
-## Learn More
+AIは状況を分析し、最適なアクションとその理由を詳しく説明します。
 
-To learn more about Next.js, take a look at the following resources:
+## ICM計算
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+このアプリケーションは以下のICMポイント配分を考慮した戦略を提案します:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- 1位: 30pt
+- 2位: 20pt
+- 3位: 10pt
+- 4位: -10pt
+- 5位: -20pt
+- 6位: -30pt
 
-## Deploy on Vercel
+## テクノロジー
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- [Next.js](https://nextjs.org/) - Reactフレームワーク
+- [Tailwind CSS](https://tailwindcss.com/) - スタイリング
+- [Anthropic Claude API](https://www.anthropic.com/) - ポーカー戦略AI分析
+- [TypeScript](https://www.typescriptlang.org/) - 型安全性
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## ライセンス
+
+MIT

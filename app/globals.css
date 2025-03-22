@@ -1,8 +1,14 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --poker-primary: #2563eb;
+  --poker-secondary: #1e40af;
+  --poker-accent: #3b82f6;
+  --poker-bg-dark: #111827;
+  --poker-bg-card: #1f2937;
 }
 
 @theme inline {
@@ -14,8 +20,8 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #0f172a;
+    --foreground: #f8fafc;
   }
 }
 
@@ -23,4 +29,143 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Tailwind prose overrides for dark mode */
+.prose {
+  max-width: 65ch;
+  color: var(--foreground);
+}
+
+.prose p {
+  margin-top: 1.25em;
+  margin-bottom: 1.25em;
+}
+
+.prose strong {
+  color: var(--foreground);
+  font-weight: 600;
+}
+
+.prose-invert {
+  color: var(--foreground);
+}
+
+.prose-invert a {
+  color: var(--poker-accent);
+}
+
+/* Markdown code blocks */
+.prose pre {
+  background-color: #1a1f2e !important;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  overflow-x: auto;
+  margin: 1.5rem 0;
+  border: 1px solid #2d3748;
+}
+
+.prose code {
+  background-color: rgba(45, 55, 72, 0.4);
+  padding: 0.2em 0.4em;
+  border-radius: 0.25rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
+  font-size: 0.875em;
+}
+
+.prose pre code {
+  background-color: transparent;
+  padding: 0;
+  border-radius: 0;
+  color: #e2e8f0;
+}
+
+/* Tables in markdown */
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  font-size: 0.875rem;
+}
+
+.prose thead {
+  background-color: rgba(45, 55, 72, 0.6);
+}
+
+.prose th {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-weight: 600;
+  border-bottom: 1px solid #4a5568;
+}
+
+.prose td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #2d3748;
+}
+
+.prose tr:last-child td {
+  border-bottom: none;
+}
+
+/* Blockquotes in markdown */
+.prose blockquote {
+  border-left: 4px solid var(--poker-accent);
+  padding: 0.5rem 0 0.5rem 1rem;
+  margin: 1.5rem 0;
+  font-style: italic;
+  background-color: rgba(45, 55, 72, 0.3);
+  border-radius: 0 0.25rem 0.25rem 0;
+}
+
+/* Lists in markdown */
+.prose ul {
+  list-style-type: disc;
+  padding-left: 1.5rem;
+  margin: 1rem 0;
+}
+
+.prose ol {
+  list-style-type: decimal;
+  padding-left: 1.5rem;
+  margin: 1rem 0;
+}
+
+.prose li {
+  margin: 0.5rem 0;
+}
+
+.prose li > ul,
+.prose li > ol {
+  margin: 0.5rem 0;
+}
+
+/* Card visuals */
+.card-spades,
+.card-clubs {
+  color: #ffffff;
+}
+
+.card-hearts,
+.card-diamonds {
+  color: #ef4444;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--poker-bg-dark);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--poker-accent);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--poker-primary);
 }
