@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import CardDisplay from "./CardDisplay";
 
 type Position =
   | "BTN"
@@ -56,6 +57,10 @@ export default function PokerForm({
 }) {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [step, setStep] = useState<number>(1);
+  const [cardSelectorOpen, setCardSelectorOpen] = useState<boolean>(false);
+  const [currentCardIndex, setCurrentCardIndex] = useState<0 | 1>(0);
+  const [currentCardType, setCurrentCardType] = useState<"hero" | "flop" | "turn" | "river">("hero");
+  const [currentFlopIndex, setCurrentFlopIndex] = useState<0 | 1 | 2>(0);
   // ポジションテーブル - プレイヤー数ごとに有効なポジションを定義
   const positionsByPlayerCount: Record<number, Position[]> = {
     2: ["SB", "BB"],
@@ -700,6 +705,112 @@ export default function PokerForm({
       stacks: newStacks,
     });
   };
+  
+  // カード選択モーダルを開く
+  const openCardSelector = (index: 0 | 1) => {
+    setCurrentCardIndex(index);
+    setCurrentCardType("hero");
+    setCardSelectorOpen(true);
+  };
+
+  // フロップカード選択モーダルを開く
+  const openFlopCardSelector = (index: 0 | 1 | 2) => {
+    setCurrentFlopIndex(index);
+    setCurrentCardType("flop");
+    setCardSelectorOpen(true);
+  };
+
+  // ターンカード選択モーダルを開く
+  const openTurnCardSelector = () => {
+    setCurrentCardType("turn");
+    setCardSelectorOpen(true);
+  };
+
+  // リバーカード選択モーダルを開く
+  const openRiverCardSelector = () => {
+    setCurrentCardType("river");
+    setCardSelectorOpen(true);
+  };
+  
+  // カードを選択
+  const selectCard = (rank: string, suit: string) => {
+    if (currentCardType === "hero") {
+      // 直接ステートを更新
+      const newHand = [...handHistory.heroHand] as [Card | null, Card | null];
+      const newCard = { rank, suit };
+      
+      // 現在のカードを削除
+      const usedCards = new Set(handHistory.usedCards);
+      const currentCard = handHistory.heroHand[currentCardIndex];
+      if (currentCard?.rank && currentCard?.suit) {
+        usedCards.delete(`${currentCard.rank}${currentCard.suit}`);
+      }
+      
+      // 新しいカードを追加
+      usedCards.add(`${rank}${suit}`);
+      newHand[currentCardIndex] = newCard;
+      
+      setHandHistory({
+        ...handHistory,
+        heroHand: newHand,
+        usedCards
+      });
+    } else if (currentCardType === "flop") {
+      // フロップの直接更新
+      const newFlop = [...handHistory.flopCards] as [Card | null, Card | null, Card | null];
+      const newCard = { rank, suit };
+      
+      // 現在のカードを削除
+      const usedCards = new Set(handHistory.usedCards);
+      const currentCard = handHistory.flopCards[currentFlopIndex];
+      if (currentCard?.rank && currentCard?.suit) {
+        usedCards.delete(`${currentCard.rank}${currentCard.suit}`);
+      }
+      
+      // 新しいカードを追加
+      usedCards.add(`${rank}${suit}`);
+      newFlop[currentFlopIndex] = newCard;
+      
+      setHandHistory({
+        ...handHistory,
+        flopCards: newFlop,
+        usedCards
+      });
+    } else if (currentCardType === "turn") {
+      // ターンの直接更新
+      const usedCards = new Set(handHistory.usedCards);
+      const currentCard = handHistory.turnCard;
+      if (currentCard?.rank && currentCard?.suit) {
+        usedCards.delete(`${currentCard.rank}${currentCard.suit}`);
+      }
+      
+      // 新しいカードを追加
+      usedCards.add(`${rank}${suit}`);
+      
+      setHandHistory({
+        ...handHistory,
+        turnCard: { rank, suit },
+        usedCards
+      });
+    } else if (currentCardType === "river") {
+      // リバーの直接更新
+      const usedCards = new Set(handHistory.usedCards);
+      const currentCard = handHistory.riverCard;
+      if (currentCard?.rank && currentCard?.suit) {
+        usedCards.delete(`${currentCard.rank}${currentCard.suit}`);
+      }
+      
+      // 新しいカードを追加
+      usedCards.add(`${rank}${suit}`);
+      
+      setHandHistory({
+        ...handHistory,
+        riverCard: { rank, suit },
+        usedCards
+      });
+    }
+    setCardSelectorOpen(false);
+  };
 
   // Step 1: Basic Info
   const renderBasicInfoStep = () => (
@@ -829,91 +940,79 @@ export default function PokerForm({
         <label className="block mb-2 text-sm font-medium">Heroのハンド</label>
 
         {/* Visual card display */}
-        {handHistory.heroHand[0]?.rank &&
-          handHistory.heroHand[0]?.suit &&
-          handHistory.heroHand[1]?.rank &&
-          handHistory.heroHand[1]?.suit && (
-            <div className="mb-4 flex items-center">
-              <span className="mr-2">選択中:</span>
-              <div
-                className={`inline-flex items-center justify-center rounded-md border border-gray-600 text-2xl px-2 py-1 mx-1 bg-gray-800 font-bold ${
-                  handHistory.heroHand[0]?.suit === "h" ||
-                  handHistory.heroHand[0]?.suit === "d"
-                    ? "text-red-500"
-                    : "text-white"
-                }`}
-              >
-                {handHistory.heroHand[0]?.rank}
-                {handHistory.heroHand[0]?.suit === "h"
-                  ? "♥"
-                  : handHistory.heroHand[0]?.suit === "d"
-                  ? "♦"
-                  : handHistory.heroHand[0]?.suit === "s"
-                  ? "♠"
-                  : "♣"}
-              </div>
-              <div
-                className={`inline-flex items-center justify-center rounded-md border border-gray-600 text-2xl px-2 py-1 mx-1 bg-gray-800 font-bold ${
-                  handHistory.heroHand[1]?.suit === "h" ||
-                  handHistory.heroHand[1]?.suit === "d"
-                    ? "text-red-500"
-                    : "text-white"
-                }`}
-              >
-                {handHistory.heroHand[1]?.rank}
-                {handHistory.heroHand[1]?.suit === "h"
-                  ? "♥"
-                  : handHistory.heroHand[1]?.suit === "d"
-                  ? "♦"
-                  : handHistory.heroHand[1]?.suit === "s"
-                  ? "♠"
-                  : "♣"}
-              </div>
+        <div className="mb-4 flex items-center">
+          <span className="mr-2">選択中:</span>
+          {handHistory.heroHand[0]?.rank && handHistory.heroHand[0]?.suit ? (
+            <div
+              className={`inline-flex items-center justify-center rounded-md border border-gray-600 text-2xl px-2 py-1 mx-1 bg-gray-800 font-bold ${
+                handHistory.heroHand[0]?.suit === "h" ||
+                handHistory.heroHand[0]?.suit === "d"
+                  ? "text-red-500"
+                  : "text-white"
+              }`}
+            >
+              {handHistory.heroHand[0]?.rank}
+              {handHistory.heroHand[0]?.suit === "h"
+                ? "♥"
+                : handHistory.heroHand[0]?.suit === "d"
+                ? "♦"
+                : handHistory.heroHand[0]?.suit === "s"
+                ? "♠"
+                : "♣"}
             </div>
+          ) : (
+            <button
+              onClick={() => openCardSelector(0)}
+              className="inline-flex items-center justify-center rounded-md border border-gray-600 text-2xl px-2 py-1 mx-1 bg-gray-800 text-gray-400 h-10 w-12"
+            >
+              ?
+            </button>
           )}
-
-        {/* Card selection */}
-        <div className="flex space-x-4">
-          {[0, 1].map((index) => (
-            <div key={index} className="space-y-2">
-              <label className="block text-xs">カード {index + 1}</label>
-              <div className="flex space-x-2">
-                <select
-                  value={handHistory.heroHand[index]?.rank || ""}
-                  onChange={(e) =>
-                    updateHeroHand(index as 0 | 1, "rank", e.target.value)
-                  }
-                  className="p-2 bg-white/5 border border-gray-600 rounded-md"
-                >
-                  <option value="">ランク</option>
-                  {getAvailableRanks().map((rank) => (
-                    <option key={rank} value={rank}>
-                      {rank}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  value={handHistory.heroHand[index]?.suit || ""}
-                  onChange={(e) =>
-                    updateHeroHand(index as 0 | 1, "suit", e.target.value)
-                  }
-                  className="p-2 bg-white/5 border border-gray-600 rounded-md"
-                  disabled={!handHistory.heroHand[index]?.rank}
-                >
-                  <option value="">スート</option>
-                  {getAvailableSuits(
-                    handHistory.heroHand[index]?.rank || "",
-                    "hero",
-                    index as 0 | 1
-                  ).map((suit) => (
-                    <option key={suit} value={suit}>
-                      {suit}
-                    </option>
-                  ))}
-                </select>
-              </div>
+          
+          {handHistory.heroHand[1]?.rank && handHistory.heroHand[1]?.suit ? (
+            <div
+              className={`inline-flex items-center justify-center rounded-md border border-gray-600 text-2xl px-2 py-1 mx-1 bg-gray-800 font-bold ${
+                handHistory.heroHand[1]?.suit === "h" ||
+                handHistory.heroHand[1]?.suit === "d"
+                  ? "text-red-500"
+                  : "text-white"
+              }`}
+            >
+              {handHistory.heroHand[1]?.rank}
+              {handHistory.heroHand[1]?.suit === "h"
+                ? "♥"
+                : handHistory.heroHand[1]?.suit === "d"
+                ? "♦"
+                : handHistory.heroHand[1]?.suit === "s"
+                ? "♠"
+                : "♣"}
             </div>
-          ))}
+          ) : (
+            <button
+              onClick={() => openCardSelector(1)}
+              className="inline-flex items-center justify-center rounded-md border border-gray-600 text-2xl px-2 py-1 mx-1 bg-gray-800 text-gray-400 h-10 w-12"
+            >
+              ?
+            </button>
+          )}
+        </div>
+
+        {/* Card selection buttons */}
+        <div className="flex space-x-4">
+          <button
+            type="button"
+            onClick={() => openCardSelector(0)}
+            className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          >
+            カード1を選択
+          </button>
+          <button
+            type="button"
+            onClick={() => openCardSelector(1)}
+            className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          >
+            カード2を選択
+          </button>
         </div>
       </div>
 
@@ -1175,40 +1274,28 @@ export default function PokerForm({
           {[0, 1, 2].map((index) => (
             <div key={index} className="space-y-2">
               <label className="block text-xs">カード {index + 1}</label>
-              <div className="flex space-x-2">
-                <select
-                  value={handHistory.flopCards[index]?.rank || ""}
-                  onChange={(e) =>
-                    updateFlopCard(index as 0 | 1 | 2, "rank", e.target.value)
-                  }
-                  className="p-2 bg-white/5 border border-gray-600 rounded-md"
-                >
-                  <option value="">ランク</option>
-                  {getAvailableRanks().map((rank) => (
-                    <option key={rank} value={rank}>
-                      {rank}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  value={handHistory.flopCards[index]?.suit || ""}
-                  onChange={(e) =>
-                    updateFlopCard(index as 0 | 1 | 2, "suit", e.target.value)
-                  }
-                  className="p-2 bg-white/5 border border-gray-600 rounded-md"
-                  disabled={!handHistory.flopCards[index]?.rank}
-                >
-                  <option value="">スート</option>
-                  {getAvailableSuits(
-                    handHistory.flopCards[index]?.rank || "",
-                    "flop",
-                    index as 0 | 1 | 2
-                  ).map((suit) => (
-                    <option key={suit} value={suit}>
-                      {suit}
-                    </option>
-                  ))}
-                </select>
+              <div>
+                {handHistory.flopCards[index]?.rank && handHistory.flopCards[index]?.suit ? (
+                  <button 
+                    type="button"
+                    onClick={() => openFlopCardSelector(index as 0 | 1 | 2)}
+                    className="hover:scale-105 transition-transform"
+                  >
+                    <CardDisplay 
+                      rank={handHistory.flopCards[index]!.rank} 
+                      suit={handHistory.flopCards[index]!.suit} 
+                      size="md" 
+                    />
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => openFlopCardSelector(index as 0 | 1 | 2)}
+                    className="inline-flex items-center justify-center rounded-md border border-gray-600 text-2xl px-4 py-2 mx-1 bg-gray-800 text-gray-400 hover:bg-gray-700 transition-colors h-10 w-16"
+                  >
+                    選択
+                  </button>
+                )}
               </div>
             </div>
           ))}
@@ -1323,34 +1410,28 @@ export default function PokerForm({
         )}
 
         {/* Card selection */}
-        <div className="flex space-x-2">
-          <select
-            value={handHistory.turnCard?.rank || ""}
-            onChange={(e) => updateTurnCard("rank", e.target.value)}
-            className="p-2 bg-white/5 border border-gray-600 rounded-md"
-          >
-            <option value="">ランク</option>
-            {getAvailableRanks().map((rank) => (
-              <option key={rank} value={rank}>
-                {rank}
-              </option>
-            ))}
-          </select>
-          <select
-            value={handHistory.turnCard?.suit || ""}
-            onChange={(e) => updateTurnCard("suit", e.target.value)}
-            className="p-2 bg-white/5 border border-gray-600 rounded-md"
-            disabled={!handHistory.turnCard?.rank}
-          >
-            <option value="">スート</option>
-            {getAvailableSuits(handHistory.turnCard?.rank || "", "turn").map(
-              (suit) => (
-                <option key={suit} value={suit}>
-                  {suit}
-                </option>
-              )
-            )}
-          </select>
+        <div>
+          {handHistory.turnCard?.rank && handHistory.turnCard?.suit ? (
+            <button 
+              type="button"
+              onClick={() => openTurnCardSelector()}
+              className="hover:scale-105 transition-transform"
+            >
+              <CardDisplay 
+                rank={handHistory.turnCard.rank} 
+                suit={handHistory.turnCard.suit} 
+                size="md" 
+              />
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => openTurnCardSelector()}
+              className="inline-flex items-center justify-center rounded-md border border-gray-600 text-lg px-4 py-2 bg-gray-800 text-gray-400 hover:bg-gray-700 transition-colors"
+            >
+              ターンカードを選択
+            </button>
+          )}
         </div>
       </div>
 
@@ -1455,34 +1536,28 @@ export default function PokerForm({
         )}
 
         {/* Card selection */}
-        <div className="flex space-x-2">
-          <select
-            value={handHistory.riverCard?.rank || ""}
-            onChange={(e) => updateRiverCard("rank", e.target.value)}
-            className="p-2 bg-white/5 border border-gray-600 rounded-md"
-          >
-            <option value="">ランク</option>
-            {getAvailableRanks().map((rank) => (
-              <option key={rank} value={rank}>
-                {rank}
-              </option>
-            ))}
-          </select>
-          <select
-            value={handHistory.riverCard?.suit || ""}
-            onChange={(e) => updateRiverCard("suit", e.target.value)}
-            className="p-2 bg-white/5 border border-gray-600 rounded-md"
-            disabled={!handHistory.riverCard?.rank}
-          >
-            <option value="">スート</option>
-            {getAvailableSuits(handHistory.riverCard?.rank || "", "river").map(
-              (suit) => (
-                <option key={suit} value={suit}>
-                  {suit}
-                </option>
-              )
-            )}
-          </select>
+        <div>
+          {handHistory.riverCard?.rank && handHistory.riverCard?.suit ? (
+            <button 
+              type="button"
+              onClick={() => openRiverCardSelector()}
+              className="hover:scale-105 transition-transform"
+            >
+              <CardDisplay 
+                rank={handHistory.riverCard.rank} 
+                suit={handHistory.riverCard.suit} 
+                size="md" 
+              />
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => openRiverCardSelector()}
+              className="inline-flex items-center justify-center rounded-md border border-gray-600 text-lg px-4 py-2 bg-gray-800 text-gray-400 hover:bg-gray-700 transition-colors"
+            >
+              リバーカードを選択
+            </button>
+          )}
         </div>
       </div>
 
@@ -1584,6 +1659,85 @@ export default function PokerForm({
     </div>
   );
 
+  // カード選択モーダル
+  const CardSelectorModal = () => {
+    // すでに使用済みのカードは選択できないようにする
+    const isCardAvailable = (rank: string, suit: string): boolean => {
+      // 現在編集中のカードは選択可能
+      if (currentCardType === "hero" && 
+          handHistory.heroHand[currentCardIndex]?.rank === rank && 
+          handHistory.heroHand[currentCardIndex]?.suit === suit) {
+        return true;
+      }
+      
+      if (currentCardType === "flop" && 
+          handHistory.flopCards[currentFlopIndex]?.rank === rank && 
+          handHistory.flopCards[currentFlopIndex]?.suit === suit) {
+        return true;
+      }
+      
+      if (currentCardType === "turn" && 
+          handHistory.turnCard?.rank === rank && 
+          handHistory.turnCard?.suit === suit) {
+        return true;
+      }
+      
+      if (currentCardType === "river" && 
+          handHistory.riverCard?.rank === rank && 
+          handHistory.riverCard?.suit === suit) {
+        return true;
+      }
+      
+      // 他のカードが同じカードを使っていないか確認
+      return !isCardUsed(rank, suit);
+    };
+
+    return (
+      <div className={`fixed inset-0 bg-black/70 flex items-center justify-center z-50 ${cardSelectorOpen ? '' : 'hidden'}`}>
+        <div className="bg-gray-800 rounded-lg p-6 w-full max-w-xl max-h-[80vh] overflow-y-auto">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-xl font-bold">
+              {currentCardType === "hero" ? `カード${currentCardIndex + 1}を選択` :
+               currentCardType === "flop" ? `フロップ${currentFlopIndex + 1}を選択` :
+               currentCardType === "turn" ? "ターンカードを選択" :
+               "リバーカードを選択"}
+            </h3>
+            <button
+              type="button"
+              onClick={() => setCardSelectorOpen(false)}
+              className="text-gray-400 hover:text-white"
+            >
+              ✕
+            </button>
+          </div>
+          
+          <div className="grid grid-cols-4 gap-2 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-13">
+            {ranks.flatMap(rank => 
+              suits.map(suit => {
+                const available = isCardAvailable(rank, suit);
+                return (
+                  <button
+                    key={`${rank}${suit}`}
+                    type="button"
+                    disabled={!available}
+                    onClick={() => available && selectCard(rank, suit)}
+                    className={`${available ? 'cursor-pointer hover:scale-110 transition-transform' : 'opacity-30 cursor-not-allowed'}`}
+                  >
+                    <CardDisplay 
+                      rank={rank} 
+                      suit={suit} 
+                      size="md" 
+                    />
+                  </button>
+                );
+              })
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="w-full max-w-4xl mx-auto">
       <h2 className="text-2xl font-bold mb-6">ポーカーハンド解析</h2>
@@ -1630,6 +1784,9 @@ export default function PokerForm({
         {step === 5 && renderRiverStep()}
         {step === 6 && renderReviewStep()}
       </form>
+      
+      {/* カード選択モーダル */}
+      <CardSelectorModal />
     </div>
   );
 }
