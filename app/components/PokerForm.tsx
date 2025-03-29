@@ -61,7 +61,7 @@ export default function PokerForm({
     heroPosition: "CO",
     playerCount: 6,
     stacks: getInitialStacks(6),
-    potSize: 0,
+    potSize: 2.5, // Initial pot: BB + SB + Ante (as per Issue #6)
     preflopActions: [],
     flopCards: [null, null, null],
     flopActions: [],
@@ -176,6 +176,37 @@ export default function PokerForm({
     return history;
   };
 
+  // --- Pot Calculation Helper ---
+  const calculatePotSize = (history: HandHistoryState): number => {
+    let totalPot = 1.0 + 0.5 + 1.0; // Initial pot: BB + SB + Ante
+
+    const allActions: ActionEntry[] = [
+      ...history.preflopActions,
+      ...history.flopActions,
+      ...history.turnActions,
+      ...history.riverActions,
+    ];
+
+    allActions.forEach((action) => {
+      if (
+        (action.action === "bet" ||
+          action.action === "call" ||
+          action.action === "raise") &&
+        action.amount &&
+        action.amount > 0
+      ) {
+        totalPot += action.amount;
+      }
+      // Note: 'all-in' might need specific handling depending on stack sizes,
+      // but for now, assume 'amount' reflects the contributed amount.
+      if (action.action === "all-in" && action.amount && action.amount > 0) {
+        totalPot += action.amount;
+      }
+    });
+
+    return totalPot;
+  };
+
   // --- Card Update Handlers ---
   const updateCardState = (
     cardIdentifier:
@@ -242,21 +273,16 @@ export default function PokerForm({
       }
       currentActions.push(newAction);
 
-      let potIncrement = 0;
-      if (
-        (newAction.action === "bet" ||
-          newAction.action === "call" ||
-          newAction.action === "raise") &&
-        newAction.amount &&
-        newAction.amount > 0
-      ) {
-        potIncrement = newAction.amount;
-      }
+      // Create a temporary state to pass to calculatePotSize
+      const tempState = {
+        ...prev,
+        [actionField]: currentActions,
+      };
 
       return {
         ...prev,
         [actionField]: currentActions,
-        potSize: prev.potSize + potIncrement,
+        potSize: calculatePotSize(tempState), // Recalculate pot size
       };
     });
   };
@@ -265,8 +291,9 @@ export default function PokerForm({
     const actionField = `${stage}Actions` as keyof HandHistoryState;
     setHandHistory((prev) => {
       const currentActions = [...(prev[actionField] as ActionEntry[])];
-      const removedAction = currentActions[index];
-      let potDecrement = 0;
+      // const removedAction = currentActions[index]; // Pot calculation doesn't need this directly
+      // let potDecrement = 0; // Removed unused variable
+      /* // Original decrement logic removed
       if (
         (removedAction.action === "bet" ||
           removedAction.action === "call" ||
@@ -274,13 +301,21 @@ export default function PokerForm({
         removedAction.amount &&
         removedAction.amount > 0
       ) {
-        potDecrement = removedAction.amount;
+         potDecrement = removedAction.amount; // Removed unused variable assignment
       }
+      */
       currentActions.splice(index, 1);
+
+      // Create a temporary state to pass to calculatePotSize
+      const tempState = {
+        ...prev,
+        [actionField]: currentActions,
+      };
+
       return {
         ...prev,
         [actionField]: currentActions,
-        potSize: Math.max(0, prev.potSize - potDecrement),
+        potSize: calculatePotSize(tempState), // Recalculate pot size
       };
     });
   };

@@ -55,7 +55,7 @@ export default function StreetActionsForm({
     amount: undefined,
   });
 
-  const needsAmount = ["bet", "raise", "call"].includes(newAction.action);
+  const needsAmount = ["bet", "raise"].includes(newAction.action); // 'call' を除外
   const isQuestion = newAction.action === "?";
   const currentActions = handHistory[`${stage}Actions`];
 
