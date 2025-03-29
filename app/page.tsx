@@ -3,7 +3,7 @@
 import { useChat } from "@ai-sdk/react";
 import PokerForm from "./components/PokerForm";
 import AnalysisResponse from "./components/AnalysisResponse";
-import { useEffect } from "react";
+import { useRef } from "react";
 
 export default function Home() {
   const { messages, isLoading, handleSubmit, setInput, input } = useChat({
@@ -13,24 +13,18 @@ export default function Home() {
     initialMessages: [],
   });
 
-  useEffect(() => {
-    if (input) {
-      const currentForm = document.createElement("form");
-      currentForm.onsubmit = (e) => {
-        e.preventDefault();
-        handleSubmit(e as any);
-      };
-      currentForm.dispatchEvent(new Event("submit", { cancelable: true }));
-    }
-  }, [input, handleSubmit]);
+  const chatInputRef = useRef<HTMLInputElement>(null);
 
-  const handleAnalyze = async (handHistory: string) => {
-    try {
-      // aiのuseChat内部で処理するためにformのsubmitを呼び出し
-      setInput(handHistory);
-    } catch (error) {
-      console.error("Error analyzing hand:", error);
-    }
+  // ハンド分析の処理（setInputの反映を待ってからhandleSubmitを呼び出す）
+  const handleAnalyze = (handHistory: string) => {
+    // ハンド履歴を入力にセット
+    setInput(handHistory);
+    
+    // setInputの状態更新が反映されるのを少し待ってからhandleSubmitを呼び出す
+    setTimeout(() => {
+      const fakeEvent = {} as React.FormEvent<HTMLFormElement>;
+      handleSubmit(fakeEvent);
+    }, 0);
   };
 
   return (
@@ -48,6 +42,33 @@ export default function Home() {
         </section>
 
         <AnalysisResponse messages={messages} isLoading={isLoading} />
+
+        {messages.length > 0 && (
+          <section className="w-full max-w-4xl mx-auto bg-gray-900 p-6 rounded-lg shadow-lg">
+            <h2 className="text-2xl font-bold mb-4">AIに質問する</h2>
+            <p className="text-gray-300 mb-4">
+              分析結果について更に質問したいことがあれば入力してください。
+            </p>
+
+            <form onSubmit={handleSubmit} className="relative">
+              <input
+                ref={chatInputRef}
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="質問を入力してください..."
+                className="w-full p-4 pr-20 bg-gray-800 border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <button
+                type="submit"
+                disabled={isLoading || !input.trim()}
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-600 disabled:text-gray-300"
+              >
+                送信
+              </button>
+            </form>
+          </section>
+        )}
       </main>
 
       <footer className="mt-16 py-6 text-center text-gray-400 text-sm">
