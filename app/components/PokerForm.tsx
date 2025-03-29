@@ -75,10 +75,25 @@ export default function PokerForm({
   // --- Helper Functions ---
 
   const getAvailablePositions = (): Position[] => {
-    return (
+    const basePositions =
       positionsByPlayerCount[handHistory.playerCount] ||
-      positionsByPlayerCount[6]
-    );
+      positionsByPlayerCount[6];
+
+    const foldedPositions = new Set<Position>();
+    const allActions: ActionEntry[] = [
+      ...handHistory.preflopActions,
+      ...handHistory.flopActions,
+      ...handHistory.turnActions,
+      ...handHistory.riverActions, // Typo fixed: history -> handHistory
+    ];
+
+    allActions.forEach((action) => {
+      if (action.action === "fold") {
+        foldedPositions.add(action.position);
+      }
+    });
+
+    return basePositions.filter((pos) => !foldedPositions.has(pos));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
