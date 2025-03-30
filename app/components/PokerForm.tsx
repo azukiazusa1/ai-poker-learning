@@ -74,10 +74,40 @@ export default function PokerForm({
 
   // --- Helper Functions ---
 
-  const getAvailablePositions = (): Position[] => {
-    const basePositions =
+  // Define standard position orders
+  const preflopOrder: Position[] = [
+    "UTG",
+    "UTG+1",
+    "MP",
+    "MP+1",
+    "HJ",
+    "CO",
+    "BTN",
+    "SB",
+    "BB",
+  ];
+  const postflopOrder: Position[] = [
+    "SB",
+    "BB",
+    "UTG",
+    "UTG+1",
+    "MP",
+    "MP+1",
+    "HJ",
+    "CO",
+    "BTN",
+  ];
+
+  const getAvailablePositions = (stage: Street): Position[] => {
+    const allPossiblePositions =
       positionsByPlayerCount[handHistory.playerCount] ||
       positionsByPlayerCount[6];
+    const currentOrder = stage === "preflop" ? preflopOrder : postflopOrder;
+
+    // Filter the standard order to include only positions relevant for the player count
+    const basePositions = currentOrder.filter((pos) =>
+      allPossiblePositions.includes(pos)
+    );
 
     const foldedPositions = new Set<Position>();
     const allActions: ActionEntry[] = [
