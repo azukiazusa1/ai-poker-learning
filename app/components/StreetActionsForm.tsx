@@ -12,7 +12,7 @@ import {
 interface StreetActionsFormProps {
   stage: Street;
   handHistory: HandHistoryState;
-  getAvailablePositions: () => Position[];
+  getAvailablePositions: (stage: Street) => Position[]; // Updated signature
   addAction: (stage: Street, action: ActionEntry) => void;
   removeAction: (stage: Street, index: number) => void;
   onAnalyze: (history: string) => void; // "?" アクション用
@@ -163,11 +163,15 @@ export default function StreetActionsForm({
               }
               className="w-full p-2 bg-white/5 border border-gray-600 rounded-md"
             >
-              {getAvailablePositions().map((pos) => (
-                <option key={pos} value={pos}>
-                  {pos === handHistory.heroPosition ? `${pos} (Hero)` : pos}
-                </option>
-              ))}
+              {getAvailablePositions(stage).map(
+                (
+                  pos // Pass stage here
+                ) => (
+                  <option key={pos} value={pos}>
+                    {pos === handHistory.heroPosition ? `${pos} (Hero)` : pos}
+                  </option>
+                )
+              )}
             </select>
           </div>
 
